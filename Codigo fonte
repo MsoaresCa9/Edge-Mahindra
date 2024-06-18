@@ -1,0 +1,62 @@
+#include <LiquidCrystal.h>
+
+const int ledPins[] = {8, 9, 10};
+const int numLeds = sizeof(ledPins) / sizeof(ledPins[0]);
+const int analogPinA2 = A2;
+const int analogPinA0 = A0;
+const int lcdCols = 16;
+const int lcdRows = 2;
+const int baudRate = 9600;
+float temp = 0.0;
+float procent = 0.0;
+int potencia;
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+void setup() {
+    Serial.begin(baudRate);
+    lcd.begin(lcdCols, lcdRows);
+    lcd.print("Bateria de: ");
+  
+    for (int i = 0; i < numLeds; i++) {
+        pinMode(ledPins[i], OUTPUT);
+    }
+}
+
+void loop() {
+    int analogValue = analogRead(analogPinA2);
+    temp = (analogValue * 5.0) / 1023.0;
+    procent = temp * 20;
+
+    potencia = map(analogRead(analogPinA0), 0, 1023, 0, 270);
+  
+    controlLeds(potencia);
+    displayValues(temp, procent);
+    delay(500);
+}
+
+void controlLeds(int potencia) {
+    if (potencia > 180) {
+        setLedsState(LOW, LOW, HIGH);
+    } else if (potencia > 50) {
+        setLedsState(LOW, HIGH, LOW);
+    } else if (potencia > 10) {
+        setLedsState(HIGH, LOW, LOW);
+    } else {
+        setLedsState(LOW, LOW, LOW);
+    }
+}
+
+void setLedsState(int state0, int state1, int state2) {
+    digitalWrite(ledPins[0], state0);
+    digitalWrite(ledPins[1], state1);
+    digitalWrite(ledPins[2], state2);
+}
+
+void displayValues(float temp, float procent) {
+    Serial.print("v= ");
+    Serial.println(temp);
+    lcd.setCursor(2, 1);
+    lcd.print(procent);
+    lcd.print("%");
+}
